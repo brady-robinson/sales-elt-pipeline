@@ -23,6 +23,7 @@ PG_USER = os.getenv("PG_USER", "airflow")
 PG_PASS = os.getenv("PG_PASS", "airflow")
 
 def download_csv():
+    print(f"Connecting to MinIO at {MINIO_ENDPOINT} with access key {MINIO_ACCESS}...")
     session = boto3.session.Session()
     s3 = session.client(
         service_name='s3',
@@ -30,13 +31,17 @@ def download_csv():
         aws_access_key_id=MINIO_ACCESS,
         aws_secret_access_key=MINIO_SECRET
     )
+    print(f"Attempting to download {OBJECT_KEY} from bucket {BUCKET}...")
     obj = s3.get_object(Bucket=BUCKET, Key=OBJECT_KEY)
     body = obj['Body'].read().decode('utf-8')
+    print(f"Downloaded {len(body)} bytes from MinIO.")
     return body
 
 def load_to_postgres(csv_text):
+    print(f"Connecting to Postgres at {PG_HOST}:{PG_PORT}, db={PG_DB}, user={PG_USER}...")
     conn = psycopg2.connect(host=PG_HOST, port=PG_PORT, dbname=PG_DB, user=PG_USER, password=PG_PASS)
     cur = conn.cursor()
+    print("Ensuring stg_sales table exists...")
     cur.execute("""
     CREATE TABLE IF NOT EXISTS stg_sales (
         id integer PRIMARY KEY,
@@ -49,11 +54,14 @@ def load_to_postgres(csv_text):
     f = StringIO(csv_text)
     reader = csv.reader(f)
     headers = next(reader)  # skip header
+    print(f"CSV headers: {headers}")
     # Use COPY for speed
     f.seek(0)
     next(f)  # skip header
+    print("Loading data into stg_sales table...")
     cur.copy_expert("COPY stg_sales(id,order_id,customer_id,amount,created_at) FROM STDIN WITH CSV", f)
     conn.commit()
+    print("Data loaded and committed.")
     cur.close()
     conn.close()
 

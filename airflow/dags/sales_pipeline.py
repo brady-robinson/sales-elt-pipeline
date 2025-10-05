@@ -4,7 +4,6 @@ from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
 import os
 from pathlib import Path
-
 DAG_ID = "sales_pipeline"
 
 default_args = {

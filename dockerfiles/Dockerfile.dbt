@@ -1,7 +1,7 @@
 FROM python:3.11-slim
 WORKDIR /app
 RUN pip install --upgrade pip setuptools wheel --progress-bar off
-RUN pip install --no-cache-dir dbt-core==1.4.0 dbt-postgres==1.4.0 --progress-bar off
+RUN pip install --no-cache-dir dbt-core==1.4.0 dbt-postgres==1.4.0 pytz --progress-bar off
 COPY dbt /app/dbt
 WORKDIR /app/dbt
 ENTRYPOINT ["dbt"]

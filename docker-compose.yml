@@ -1,5 +1,4 @@
 version: '3.8'
-
 services:
   postgres:
     image: postgres:15
@@ -14,28 +13,46 @@ services:
 
   minio:
     image: minio/minio:RELEASE.2025-09-07T16-13-09Z-cpuv1
-    command: server /data
+    command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     ports:
-      - "9000:9000"
+      - "9100:9000"   # MinIO API
+      - "9101:9001"   # MinIO Console UI
     volumes:
       - miniodata:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    restart: unless-stopped
 
   airflow:
-    image: apache/airflow:2.7.1
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.airflow
+    command: ["bash", "/opt/airflow/create_admin_and_run_webserver.sh"]
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
-      AIRFLOW__CORE__FERNET_KEY: 'gAAAAAB...'  # replace in prod
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/sales
+      AIRFLOW__CORE__FERNET_KEY: "${FERNET_KEY}"  # Reads from .env or environment
       AIRFLOW__WEBSERVER__ENABLE_PROXY_FIX: "True"
       POSTGRES_USER: airflow
       POSTGRES_PASSWORD: airflow
       POSTGRES_DB: sales
+      AIRFLOW_ADMIN_USERNAME: ${AIRFLOW_ADMIN_USERNAME:-admin}
+      AIRFLOW_ADMIN_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD:-admin}
+      AIRFLOW_ADMIN_FIRSTNAME: ${AIRFLOW_ADMIN_FIRSTNAME:-Admin}
+      AIRFLOW_ADMIN_LASTNAME: ${AIRFLOW_ADMIN_LASTNAME:-User}
+      AIRFLOW_ADMIN_EMAIL: ${AIRFLOW_ADMIN_EMAIL:-admin@example.com}
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./ingest:/opt/ingest
       - ./dbt:/opt/dbt
+      - airflowdata:/opt/airflow
+      - ./airflow/create_admin_and_run_webserver.sh:/opt/airflow/create_admin_and_run_webserver.sh
     ports:
       - "8080:8080"
     depends_on:
@@ -64,6 +81,35 @@ services:
     depends_on:
       - postgres
 
+  airflow-scheduler:
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.airflow
+    command: ["airflow", "scheduler"]
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres:5432/sales
+      AIRFLOW__CORE__FERNET_KEY: "${FERNET_KEY}"
+      AIRFLOW__WEBSERVER__ENABLE_PROXY_FIX: "True"
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: sales
+      AIRFLOW_ADMIN_USERNAME: ${AIRFLOW_ADMIN_USERNAME:-admin}
+      AIRFLOW_ADMIN_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD:-admin}
+      AIRFLOW_ADMIN_FIRSTNAME: ${AIRFLOW_ADMIN_FIRSTNAME:-Admin}
+      AIRFLOW_ADMIN_LASTNAME: ${AIRFLOW_ADMIN_LASTNAME:-User}
+      AIRFLOW_ADMIN_EMAIL: ${AIRFLOW_ADMIN_EMAIL:-admin@example.com}
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./ingest:/opt/ingest
+      - ./dbt:/opt/dbt
+      - airflowdata:/opt/airflow
+      - ./airflow/create_admin_and_run_webserver.sh:/opt/airflow/create_admin_and_run_webserver.sh
+    depends_on:
+      - postgres
+      - minio
+
 volumes:
   pgdata:
   miniodata:
+  airflowdata:

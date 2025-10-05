@@ -1,0 +1,2 @@
+FROM apache/airflow:2.7.1
+RUN pip install 'pyarrow>=10.0.1,<10.1.0' dbt-core==1.4.0 dbt-postgres==1.4.0
