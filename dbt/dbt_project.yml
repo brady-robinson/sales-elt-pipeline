@@ -1,0 +1,17 @@
+name: sales_dbt
+version: '1.0'
+config-version: 2
+
+profile: sales_profile
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+snapshot-paths: ["snapshots"]
+target-path: "target"
+
+models:
+  sales_dbt:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table

@@ -1,0 +1,25 @@
+version: 2
+
+sources:
+  - name: raw
+    tables:
+      - name: sales
+
+models:
+  - name: stg_sales
+    description: "Staging model for sales CSV"
+    columns:
+      - name: id
+        tests:
+          - not_null
+          - unique
+      - name: order_id
+        tests:
+          - not_null
+
+  - name: sales_summary
+    description: "Daily sales aggregates"
+    columns:
+      - name: day
+        tests:
+          - not_null

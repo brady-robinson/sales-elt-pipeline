@@ -1,0 +1,12 @@
+sales_profile:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      threads: 1
+      host: postgres
+      port: 5432
+      user: airflow
+      pass: airflow
+      dbname: sales
+      schema: public
