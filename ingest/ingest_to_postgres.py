@@ -26,7 +26,7 @@ PG_PASS = os.getenv("PG_PASS", "airflow")
 
 
 def download_csv():
-    print(f"Connecting to MinIO at {MINIO_ENDPOINT} with access key {MINIO_ACCESS}...")
+    print(f"Connecting to MinIO: {MINIO_ENDPOINT} w/ key {MINIO_ACCESS}")
     session = boto3.session.Session()
     s3 = session.client(
         service_name="s3",
@@ -43,10 +43,14 @@ def download_csv():
 
 def load_to_postgres(csv_text):
     print(
-        f"Connecting to Postgres at {PG_HOST}:{PG_PORT}, db={PG_DB}, user={PG_USER}..."
+        f"Connecting to PG: {PG_HOST}:{PG_PORT}, db={PG_DB}, user={PG_USER}"
     )
     conn = psycopg2.connect(
-        host=PG_HOST, port=PG_PORT, dbname=PG_DB, user=PG_USER, password=PG_PASS
+        host=PG_HOST, 
+        port=PG_PORT, 
+        dbname=PG_DB, 
+        user=PG_USER, 
+        password=PG_PASS
     )
     cur = conn.cursor()
     print("Ensuring raw.sales table exists...")

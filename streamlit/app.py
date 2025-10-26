@@ -12,7 +12,7 @@ st.title("Sales Summary Dashboard")
 
 with engine.connect() as conn:
     df = pd.read_sql(
-        "select * from sales_summary order by day desc limit 100", 
+        "select * from sales_summary order by day desc limit 100",
         conn
         )
 

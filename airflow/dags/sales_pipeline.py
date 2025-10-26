@@ -42,7 +42,8 @@ with DAG(
     )
 
     t3_dbt_test = BashOperator(
-        task_id="dbt_test", bash_command="cd /opt/dbt && dbt test --profiles-dir ."
+        task_id="dbt_test", 
+        bash_command="cd /opt/dbt && dbt test --profiles-dir ."
     )
 
     t1_download >> t2_dbt_run >> t3_dbt_test
