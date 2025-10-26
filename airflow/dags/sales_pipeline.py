@@ -36,7 +36,7 @@ with DAG(
 
     t2_dbt_run = BashOperator(
         task_id="dbt_run",
-        bash_command="cd /opt/dbt && dbt deps && dbt seed --profiles-dir . && dbt run --profiles-dir ."
+        bash_command="cd /opt/dbt && dbt deps && dbt run --profiles-dir ."
     )
 
     t3_dbt_test = BashOperator(

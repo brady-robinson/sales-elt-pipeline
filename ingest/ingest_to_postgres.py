@@ -41,22 +41,12 @@ def load_to_postgres(csv_text):
     print(f"Connecting to Postgres at {PG_HOST}:{PG_PORT}, db={PG_DB}, user={PG_USER}...")
     conn = psycopg2.connect(host=PG_HOST, port=PG_PORT, dbname=PG_DB, user=PG_USER, password=PG_PASS)
     cur = conn.cursor()
-    print("Ensuring stg_sales table exists...")
+    print("Ensuring raw.sales table exists...")
     
-    # Check if stg_sales is a view and drop it if necessary
+    # Create the raw.sales table
     cur.execute("""
-    SELECT table_type
-    FROM information_schema.tables
-    WHERE table_name = 'stg_sales';
-    """)
-    result = cur.fetchone()
-    if result and result[0].lower() == 'view':
-        print("stg_sales is a view. Dropping the view...")
-        cur.execute("DROP VIEW stg_sales;")
-    
-    # Create the stg_sales table
-    cur.execute("""
-    CREATE TABLE IF NOT EXISTS stg_sales (
+    CREATE SCHEMA IF NOT EXISTS raw;
+    CREATE TABLE IF NOT EXISTS raw.sales (
         id integer PRIMARY KEY,
         order_id text,
         customer_id text,
@@ -64,17 +54,44 @@ def load_to_postgres(csv_text):
         created_at timestamp
     );
     """)
+    
+    # Create a temporary table for staging
+    print("Creating temporary table for staging...")
+    cur.execute("""
+    CREATE TEMP TABLE temp_sales (
+        id integer,
+        order_id text,
+        customer_id text,
+        amount double precision,
+        created_at timestamp
+    ) ON COMMIT DROP;
+    """)
+    
+    # Load data into the temporary table
     f = StringIO(csv_text)
     reader = csv.reader(f)
     headers = next(reader)  # skip header
     print(f"CSV headers: {headers}")
-    # Use COPY for speed
     f.seek(0)
     next(f)  # skip header
-    print("Loading data into stg_sales table...")
-    cur.copy_expert("COPY stg_sales(id,order_id,customer_id,amount,created_at) FROM STDIN WITH CSV", f)
+    print("Loading data into temporary table...")
+    cur.copy_expert("COPY temp_sales(id,order_id,customer_id,amount,created_at) FROM STDIN WITH CSV", f)
+    
+    # Upsert data into raw.sales
+    print("Upserting data into raw.sales...")
+    cur.execute("""
+    INSERT INTO raw.sales (id, order_id, customer_id, amount, created_at)
+    SELECT id, order_id, customer_id, amount, created_at
+    FROM temp_sales
+    ON CONFLICT (id) DO UPDATE
+    SET order_id = EXCLUDED.order_id,
+        customer_id = EXCLUDED.customer_id,
+        amount = EXCLUDED.amount,
+        created_at = EXCLUDED.created_at;
+    """)
+    
     conn.commit()
-    print("Data loaded and committed.")
+    print("Data upserted and committed.")
     cur.close()
     conn.close()
 

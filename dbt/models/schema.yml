@@ -2,9 +2,20 @@ version: 2
 
 sources:
   - name: raw
-    schema: public
     tables:
       - name: sales
+        description: "Raw sales data loaded from MinIO"
+        columns:
+          - name: id
+            description: "Primary key"
+          - name: order_id
+            description: "Order identifier"
+          - name: customer_id
+            description: "Customer identifier"
+          - name: amount
+            description: "Order amount"
+          - name: created_at
+            description: "Timestamp of the order"
 
 models:
   - name: stg_sales
