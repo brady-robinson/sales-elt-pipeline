@@ -10,7 +10,9 @@ import psycopg2
 import csv
 from io import StringIO
 
-MINIO_ENDPOINT = os.getenv("MINIO_ENDPOINT", "http://minio:9000")
+MINIO_ENDPOINT = os.getenv(
+    "MINIO_ENDPOINT", "http://minio:9000"
+)
 MINIO_ACCESS = os.getenv("MINIO_ACCESS", "minioadmin")
 MINIO_SECRET = os.getenv("MINIO_SECRET", "minioadmin")
 BUCKET = "raw"
@@ -86,7 +88,8 @@ def load_to_postgres(csv_text):
     next(f)  # skip header
     print("Loading data into temporary table...")
     cur.copy_expert(
-        "COPY temp_sales(id,order_id,customer_id,amount,created_at) FROM STDIN WITH CSV",
+        "COPY temp_sales(id,order_id,customer_id,amount,created_at) "
+        "FROM STDIN WITH CSV",
         f,
     )
 

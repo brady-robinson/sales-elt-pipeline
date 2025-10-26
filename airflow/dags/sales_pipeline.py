@@ -47,3 +47,6 @@ with DAG(
 
     t1_download >> t2_dbt_run >> t3_dbt_test
     t1_download >> t2_dbt_run >> t3_dbt_test
+
+some_variable = "This is a very long string that exceeds the character limit" \
+                " and is now split across two lines."

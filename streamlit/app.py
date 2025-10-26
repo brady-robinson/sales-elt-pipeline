@@ -11,7 +11,10 @@ engine = sqlalchemy.create_engine(DATABASE_URL)
 st.title("Sales Summary Dashboard")
 
 with engine.connect() as conn:
-    df = pd.read_sql("select * from sales_summary order by day desc limit 100", conn)
+    df = pd.read_sql(
+        "select * from sales_summary order by day desc limit 100", 
+        conn
+        )
 
     if df.empty:
         st.warning("No data in sales_summary. Run the pipeline.")
@@ -19,7 +22,5 @@ with engine.connect() as conn:
         st.line_chart(df.set_index("day")["total_amount"])
         st.dataframe(df)
 
-st.write(
-    "This is a very long string that exceeds the character limit and "
-    "is now split across two lines."
-)
+st.write("This is a very long string that exceeds the character limit and "
+         "is now split across two lines.")
