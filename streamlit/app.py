@@ -18,3 +18,8 @@ with engine.connect() as conn:
     else:
         st.line_chart(df.set_index("day")["total_amount"])
         st.dataframe(df)
+
+st.write(
+    "This is a very long string that exceeds the character limit and "
+    "is now split across two lines."
+)

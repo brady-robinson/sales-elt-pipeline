@@ -3,7 +3,6 @@ from airflow import DAG
 from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
 import os
-from pathlib import Path
 
 DAG_ID = "sales_pipeline"
 
@@ -46,4 +45,5 @@ with DAG(
         task_id="dbt_test", bash_command="cd /opt/dbt && dbt test --profiles-dir ."
     )
 
+    t1_download >> t2_dbt_run >> t3_dbt_test
     t1_download >> t2_dbt_run >> t3_dbt_test

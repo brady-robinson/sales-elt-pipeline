@@ -1,8 +1,8 @@
 with base as (
     select
         customer_id,
-        date_trunc('day', created_at) as day,
-        amount
+        amount,
+        date_trunc('day', created_at) as day
     from {{ ref('stg_sales') }}
 )
 
