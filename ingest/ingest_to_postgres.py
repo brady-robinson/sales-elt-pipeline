@@ -42,6 +42,19 @@ def load_to_postgres(csv_text):
     conn = psycopg2.connect(host=PG_HOST, port=PG_PORT, dbname=PG_DB, user=PG_USER, password=PG_PASS)
     cur = conn.cursor()
     print("Ensuring stg_sales table exists...")
+    
+    # Check if stg_sales is a view and drop it if necessary
+    cur.execute("""
+    SELECT table_type
+    FROM information_schema.tables
+    WHERE table_name = 'stg_sales';
+    """)
+    result = cur.fetchone()
+    if result and result[0].lower() == 'view':
+        print("stg_sales is a view. Dropping the view...")
+        cur.execute("DROP VIEW stg_sales;")
+    
+    # Create the stg_sales table
     cur.execute("""
     CREATE TABLE IF NOT EXISTS stg_sales (
         id integer PRIMARY KEY,
