@@ -46,10 +46,10 @@ def load_to_postgres(csv_text):
         f"Connecting to PG: {PG_HOST}:{PG_PORT}, db={PG_DB}, user={PG_USER}"
     )
     conn = psycopg2.connect(
-        host=PG_HOST, 
-        port=PG_PORT, 
-        dbname=PG_DB, 
-        user=PG_USER, 
+        host=PG_HOST,
+        port=PG_PORT,
+        dbname=PG_DB,
+        user=PG_USER,
         password=PG_PASS
     )
     cur = conn.cursor()
